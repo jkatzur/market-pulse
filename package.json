@@ -4,12 +4,12 @@
   "private": true,
   "scripts": {
     "install-all": "npm install && cd frontend && npm install && cd ../backend && npm install",
-    "start": "cd backend && node server.js",
     "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm start\"",
-    "build": "cd frontend && npm run build"
+    "build": "cd frontend && npm run build",
+    "start": "cd backend && NODE_ENV=production node server.js"
   },
   "devDependencies": {
-    "concurrently": "^8.0.1"
+    "concurrently": "^8.2.2"
   },
   "engines": {
     "node": ">=18.0.0"
