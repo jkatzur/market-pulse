@@ -7,6 +7,8 @@ import marketRoutes from './routes/market.js';
 import newsRoutes from './routes/news.js';
 import analysisRoutes from './routes/analysis.js';
 import testRoutes from './routes/test.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Validate environment variables on startup
 const requiredEnvVars = {
@@ -36,8 +38,18 @@ if (missingVars.length > 0) {
 }
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'development' 
+    ? 'http://localhost:3000'  // Allow frontend in development
+    : process.env.PRODUCTION_URL || '*'
+}));
 app.use(express.json());
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve static files from React build
+app.use(express.static(path.join(__dirname, '../frontend/build')));
 
 // Use routes
 app.use('/api/market', marketRoutes);
@@ -45,7 +57,19 @@ app.use('/api/news', newsRoutes);
 app.use('/api/analysis', analysisRoutes);
 app.use('/api/test', testRoutes);
 
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+}).on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.log(`Port ${PORT} is busy, trying ${PORT + 1}`);
+    app.listen(PORT + 1);
+  } else {
+    console.error('Server error:', err);
+  }
 }); 

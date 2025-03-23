@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import { getMarketData, getIntradayData, getMarketNews, analyzeMarketNews } from './services/api';
 import { Line } from 'react-chartjs-2';
@@ -57,7 +57,7 @@ function App() {
 
   const [newsData, setNewsData] = useState([]);
 
-  const fetchMarketData = async () => {
+  const fetchMarketData = useCallback(async () => {
     try {
       const data = await getMarketData();
       
@@ -101,9 +101,9 @@ function App() {
     } catch (error) {
       console.error('Error updating market data:', error);
     }
-  };
+  }, []);
 
-  const fetchNewsAndAnalysis = async () => {
+  const fetchNewsAndAnalysis = useCallback(async () => {
     try {
       const news = await getMarketNews();
       setNewsData(news);
@@ -122,7 +122,7 @@ function App() {
         explanation: "Error analyzing market data. Please try again later."
       }));
     }
-  };
+  }, [marketStatus.direction]);
 
   useEffect(() => {
     // Initial fetch of both market data and news
@@ -131,9 +131,7 @@ function App() {
       await fetchNewsAndAnalysis();
     };
     initializeData();
-
-    // No more polling interval
-  }, []);
+  }, [fetchMarketData, fetchNewsAndAnalysis]);
 
   const getBorderColor = (direction) => {
     switch(direction) {

@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules/
 /.pnp
 .pnp.js
 
@@ -10,6 +10,8 @@
 
 # production
 /build
+/frontend/build
+/dist
 
 # misc
 .DS_Store
@@ -18,8 +20,34 @@
 .env.development.local
 .env.test.local
 .env.production.local
-+/backend/.env
+/backend/.env
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
 
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+logs
+*.log
+
+# runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# AWS Elastic Beanstalk
+.elasticbeanstalk/
+.ebextensions/*
+!.ebextensions/nodecommand.config
+
+# temp files
+.tmp/
+.temp/
