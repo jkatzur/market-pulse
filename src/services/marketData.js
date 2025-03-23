@@ -80,19 +80,63 @@ export const getMarketData = async () => {
   }
 };
 
-export const getIntradayData = async (symbol, resolution = '1') => {
+export const getIntradayData = async (symbol, resolution = '1d') => {
   try {
+    // Get data for the last 5 trading days
     const now = Math.floor(Date.now() / 1000);
-    const startOfDay = Math.floor(new Date().setHours(9, 30, 0, 0) / 1000); // 9:30 AM EST
+    const fiveDaysAgo = now - (5 * 24 * 60 * 60);
 
     const response = await fetch(
-      `${BASE_URL}/v8/finance/chart/${MARKET_INDICES[symbol]}?interval=1m&period1=${startOfDay}&period2=${now}`
+      `${BASE_URL}/v8/finance/chart/${encodeURIComponent(MARKET_INDICES[symbol])}?interval=1d&period1=${fiveDaysAgo}&period2=${now}&range=5d`
     );
-    const data = await response.json();
 
-    return data.chart.result[0];
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log(`Raw daily data for ${symbol}:`, data);
+
+    if (!data?.chart?.result?.[0]) {
+      console.error(`No data available for ${symbol}`);
+      return [];
+    }
+
+    const result = data.chart.result[0];
+    
+    // Check if we have both timestamps and prices
+    if (!result.timestamp || !result.indicators?.quote?.[0]?.close) {
+      console.error(`Incomplete data for ${symbol}`, result);
+      return [];
+    }
+
+    const timestamps = result.timestamp;
+    const prices = result.indicators.quote[0].close;
+
+    // Format data for Chart.js
+    const chartData = timestamps
+      .map((timestamp, index) => {
+        const price = prices[index];
+        if (price === null || price === undefined) return null;
+        
+        return {
+          x: new Date(timestamp * 1000),
+          y: price
+        };
+      })
+      .filter(point => point !== null);
+
+    console.log(`Processed chart data for ${symbol}:`, chartData);
+    
+    if (chartData.length === 0) {
+      console.warn(`No valid data points for ${symbol}`);
+      return [];
+    }
+
+    return chartData;
+
   } catch (error) {
-    console.error(`Error fetching intraday data for ${symbol}:`, error);
-    throw error;
+    console.error(`Error fetching daily data for ${symbol}:`, error);
+    return [];
   }
 }; 
