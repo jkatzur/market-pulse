@@ -48,16 +48,15 @@ app.use(express.json());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Serve static files from React build
-app.use(express.static(path.join(__dirname, '../frontend/build')));
-
-// Use routes
+// API routes first
 app.use('/api/market', marketRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/analysis', analysisRoutes);
-app.use('/api/test', testRoutes);
 
-// Handle React routing, return all requests to React app
+// Then serve static files from React build
+app.use(express.static(path.join(__dirname, '../frontend/build')));
+
+// Finally, handle React routing - send all other requests to React app
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
 });
