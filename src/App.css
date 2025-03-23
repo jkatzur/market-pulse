@@ -52,6 +52,16 @@
   text-align: left;
 }
 
+.market-explanation p a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.market-explanation p a:hover {
+  text-decoration: underline;
+}
+
 .chart-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -210,4 +220,62 @@
   font-size: 0.95rem;
   line-height: 1.5;
   color: var(--text-secondary);
+}
+
+.news-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.news-link:hover {
+  background-color: var(--background-light);
+}
+
+.footnote-link {
+  color: #666;
+  text-decoration: none;
+  margin: 0 1px;
+  cursor: pointer;
+}
+
+.footnote-link:hover {
+  color: var(--text-primary);
+  text-decoration: none;
+  background-color: #f0f0f0;
+}
+
+sup {
+  font-size: 0.75em;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+  top: -0.5em;
+}
+
+sup a {
+  padding: 0 3px;
+  border-radius: 3px;
+}
+
+.footnote-number {
+  display: inline-block;
+  width: 2em;
+  color: var(--text-secondary);
+  font-weight: bold;
+}
+
+/* Add a subtle highlight effect when jumping to footnotes */
+.news-item:target {
+  animation: highlight 2s ease;
+}
+
+@keyframes highlight {
+  0% { background-color: #fff7e5; }
+  100% { background-color: white; }
+}
+
+/* Add smooth scrolling to the document */
+html {
+  scroll-behavior: smooth;
 }

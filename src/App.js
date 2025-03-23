@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import './App.css';
 import { getMarketData, getIntradayData } from './services/marketData';
 import { getMarketNews } from './services/newsService';
-import { analyzeMarketNews, findSupportingQuotes } from './services/llmService';
+import { analyzeMarketNews } from './services/llmService';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -16,6 +16,7 @@ import {
   TimeScale
 } from 'chart.js';
 import 'chartjs-adapter-date-fns';
+import { processFootnotes } from './utils/textProcessing';
 
 // Register ChartJS components
 ChartJS.register(
@@ -33,8 +34,6 @@ function App() {
   const [marketStatus, setMarketStatus] = useState({
     direction: "flat",
     explanation: "Loading market data...",
-    analysis: "",
-    supportingQuotes: "",
     timestamp: new Date().toLocaleString(),
     indices: {
       sp500: {
@@ -60,43 +59,25 @@ function App() {
 
   const [newsData, setNewsData] = useState([]);
 
-  const fetchAllData = async () => {
+  const fetchMarketData = async () => {
     try {
-      // Fetch market data
       const data = await getMarketData();
       
-      // Fetch intraday data for all indices
       const [sp500Chart, nasdaqChart, dowChart] = await Promise.all([
         getIntradayData('sp500'),
         getIntradayData('nasdaq'),
         getIntradayData('dow')
       ]);
 
-      // Add news fetch
-      const news = await getMarketNews();
-      setNewsData(news);
-
-      // Determine overall market direction based on S&P 500
       const direction = data.sp500.percentChange > 0.1 
         ? "up" 
         : data.sp500.percentChange < -0.1 
         ? "down" 
         : "flat";
 
-      let analysis = "No recent market news available.";
-      let quotes = "";
-
-      // Only call LLM if we have news articles
-      if (news && news.length > 0) {
-        analysis = await analyzeMarketNews(news, direction);
-        quotes = await findSupportingQuotes(news, analysis);
-      }
-
       setMarketStatus(prevState => ({
         ...prevState,
         direction,
-        explanation: analysis,
-        supportingQuotes: quotes,
         timestamp: new Date().toLocaleString(),
         indices: {
           sp500: {
@@ -120,7 +101,24 @@ function App() {
         }
       }));
     } catch (error) {
-      console.error('Error updating data:', error);
+      console.error('Error updating market data:', error);
+    }
+  };
+
+  const fetchNewsAndAnalysis = async () => {
+    try {
+      const news = await getMarketNews();
+      setNewsData(news);
+
+      if (news && news.length > 0) {
+        const analysis = await analyzeMarketNews(news, marketStatus.direction);
+        setMarketStatus(prevState => ({
+          ...prevState,
+          explanation: analysis
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching news:', error);
       setMarketStatus(prevState => ({
         ...prevState,
         explanation: "Error analyzing market data. Please try again later."
@@ -129,14 +127,14 @@ function App() {
   };
 
   useEffect(() => {
-    // Fetch initial data
-    fetchAllData();
+    // Initial fetch of both market data and news
+    const initializeData = async () => {
+      await fetchMarketData();
+      await fetchNewsAndAnalysis();
+    };
+    initializeData();
 
-    // Set up polling every minute
-    const intervalId = setInterval(fetchAllData, 60000);
-
-    // Cleanup interval on component unmount
-    return () => clearInterval(intervalId);
+    // No more polling interval
   }, []);
 
   const getBorderColor = (direction) => {
@@ -222,13 +220,9 @@ function App() {
         className="market-explanation"
         style={{ borderLeftColor: getBorderColor(marketStatus.direction) }}
       >
-        <p>{marketStatus.explanation}</p>
-        {marketStatus.supportingQuotes && (
-          <div className="supporting-quotes">
-            <h3>Supporting Evidence:</h3>
-            <p>{marketStatus.supportingQuotes}</p>
-          </div>
-        )}
+        <p dangerouslySetInnerHTML={{ 
+          __html: processFootnotes(marketStatus.explanation) 
+        }} />
         <small>Last updated: {marketStatus.timestamp}</small>
       </section>
 
@@ -270,16 +264,26 @@ function App() {
         </div>
       </section>
 
-      <section className="market-news">
+      <section id="market-news" className="market-news">
         <h2>Latest Market News</h2>
         <div className="news-list">
           {newsData.map((article, index) => (
-            <div key={index} className="news-item">
-              <h3>{article.title}</h3>
-              <p className="news-meta">
-                {article.provider} • {new Date(article.datePublished).toLocaleString()}
-              </p>
-              <p>{article.description}</p>
+            <div key={index} className="news-item" id={`footnote-${index + 1}`}>
+              <a 
+                href={article.url} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="news-link"
+              >
+                <h3>
+                  <span className="footnote-number">{index + 1}.</span>
+                  {article.title}
+                </h3>
+                <p className="news-meta">
+                  {article.provider} • {new Date(article.datePublished).toLocaleString()}
+                </p>
+                <p>{article.description}</p>
+              </a>
             </div>
           ))}
         </div>
