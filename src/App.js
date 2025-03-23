@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import './App.css';
-import { getMarketData, getIntradayData } from './services/marketData';
-import { getMarketNews } from './services/newsService';
-import { analyzeMarketNews } from './services/llmService';
+import { getMarketData, getIntradayData, getMarketNews, analyzeMarketNews } from './services/api';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,

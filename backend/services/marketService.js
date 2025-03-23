@@ -1,3 +1,5 @@
+import fetch from 'node-fetch';
+
 // Market indices symbols (Yahoo Finance symbols)
 const MARKET_INDICES = {
   sp500: '^GSPC',     // No URL encoding needed
@@ -5,9 +7,7 @@ const MARKET_INDICES = {
   dow: '^DJI'
 };
 
-const BASE_URL = process.env.NODE_ENV === 'development' 
-  ? '/yahoo-finance'  // Use proxy in development
-  : 'https://query1.finance.yahoo.com'; // Direct URL in production
+const BASE_URL = 'https://query1.finance.yahoo.com'; // Always use direct URL on backend
 
 export const getMarketData = async () => {
   try {
@@ -15,7 +15,6 @@ export const getMarketData = async () => {
       Object.entries(MARKET_INDICES).map(async ([key, symbol]) => {
         console.log(`Fetching data for ${symbol}...`);
         try {
-          // Add headers to avoid CORS issues
           const response = await fetch(`${BASE_URL}/v8/finance/chart/${encodeURIComponent(symbol)}`, {
             headers: {
               'Accept': 'application/json',
