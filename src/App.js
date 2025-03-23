@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 import { getMarketData, getIntradayData } from './services/marketData';
+import { getMarketNews } from './services/newsService';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -54,6 +55,8 @@ function App() {
     }
   });
 
+  const [newsData, setNewsData] = useState([]);
+
   const fetchAllData = async () => {
     try {
       // Fetch market data
@@ -65,6 +68,11 @@ function App() {
         getIntradayData('nasdaq'),
         getIntradayData('dow')
       ]);
+
+      // Add news fetch
+      const news = await getMarketNews();
+      setNewsData(news);
+      console.log('Fetched news:', news);
 
       // Determine overall market direction based on S&P 500
       const direction = data.sp500.percentChange > 0.1 
@@ -99,7 +107,7 @@ function App() {
         }
       }));
     } catch (error) {
-      console.error('Error updating market data:', error);
+      console.error('Error updating data:', error);
     }
   };
 
@@ -234,6 +242,21 @@ function App() {
                   {index.percentageChange}
                 </span>
               </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="market-news">
+        <h2>Latest Market News</h2>
+        <div className="news-list">
+          {newsData.map((article, index) => (
+            <div key={index} className="news-item">
+              <h3>{article.title}</h3>
+              <p className="news-meta">
+                {article.provider} • {new Date(article.datePublished).toLocaleString()}
+              </p>
+              <p>{article.description}</p>
             </div>
           ))}
         </div>
