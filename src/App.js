@@ -83,9 +83,14 @@ function App() {
         ? "down" 
         : "flat";
 
-      // Get LLM analysis
-      const analysis = await analyzeMarketNews(news, direction);
-      const quotes = await findSupportingQuotes(news, analysis);
+      let analysis = "No recent market news available.";
+      let quotes = "";
+
+      // Only call LLM if we have news articles
+      if (news && news.length > 0) {
+        analysis = await analyzeMarketNews(news, direction);
+        quotes = await findSupportingQuotes(news, analysis);
+      }
 
       setMarketStatus(prevState => ({
         ...prevState,
