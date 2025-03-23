@@ -193,3 +193,21 @@
   line-height: 1.5;
   color: var(--text-primary);
 }
+
+.supporting-quotes {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.supporting-quotes h3 {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.supporting-quotes p {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}

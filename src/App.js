@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import './App.css';
 import { getMarketData, getIntradayData } from './services/marketData';
 import { getMarketNews } from './services/newsService';
+import { analyzeMarketNews, findSupportingQuotes } from './services/llmService';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -32,6 +33,8 @@ function App() {
   const [marketStatus, setMarketStatus] = useState({
     direction: "flat",
     explanation: "Loading market data...",
+    analysis: "",
+    supportingQuotes: "",
     timestamp: new Date().toLocaleString(),
     indices: {
       sp500: {
@@ -72,7 +75,6 @@ function App() {
       // Add news fetch
       const news = await getMarketNews();
       setNewsData(news);
-      console.log('Fetched news:', news);
 
       // Determine overall market direction based on S&P 500
       const direction = data.sp500.percentChange > 0.1 
@@ -81,9 +83,15 @@ function App() {
         ? "down" 
         : "flat";
 
+      // Get LLM analysis
+      const analysis = await analyzeMarketNews(news, direction);
+      const quotes = await findSupportingQuotes(news, analysis);
+
       setMarketStatus(prevState => ({
         ...prevState,
         direction,
+        explanation: analysis,
+        supportingQuotes: quotes,
         timestamp: new Date().toLocaleString(),
         indices: {
           sp500: {
@@ -108,6 +116,10 @@ function App() {
       }));
     } catch (error) {
       console.error('Error updating data:', error);
+      setMarketStatus(prevState => ({
+        ...prevState,
+        explanation: "Error analyzing market data. Please try again later."
+      }));
     }
   };
 
@@ -206,6 +218,12 @@ function App() {
         style={{ borderLeftColor: getBorderColor(marketStatus.direction) }}
       >
         <p>{marketStatus.explanation}</p>
+        {marketStatus.supportingQuotes && (
+          <div className="supporting-quotes">
+            <h3>Supporting Evidence:</h3>
+            <p>{marketStatus.supportingQuotes}</p>
+          </div>
+        )}
         <small>Last updated: {marketStatus.timestamp}</small>
       </section>
 
