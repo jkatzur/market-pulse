@@ -1,32 +1,82 @@
+import { useState, useEffect } from 'react';
 import './App.css';
+import { getMarketData } from './services/marketData';
 
 function App() {
-  // Mock data
-  const marketStatus = {
-    direction: "up", // could be "up", "down", or "flat"
-    explanation: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-    timestamp: "2024-03-19 16:00 EST",
+  const [marketStatus, setMarketStatus] = useState({
+    direction: "flat",
+    explanation: "Loading market data...",
+    timestamp: new Date().toLocaleString(),
     indices: {
       sp500: {
         name: "S&P 500",
-        currentLevel: "5,149.42",
-        percentageChange: "+1.12%",
-        dayData: [/* We'll add mock chart data later */]
+        currentLevel: "Loading...",
+        percentageChange: "0.00%",
+        dayData: []
       },
       nasdaq: {
         name: "NASDAQ",
-        currentLevel: "16,166.79",
-        percentageChange: "+1.54%",
-        dayData: [/* We'll add mock chart data later */]
+        currentLevel: "Loading...",
+        percentageChange: "0.00%",
+        dayData: []
       },
       dow: {
         name: "Dow Jones",
-        currentLevel: "38,791.35",
-        percentageChange: "+0.83%",
-        dayData: [/* We'll add mock chart data later */]
+        currentLevel: "Loading...",
+        percentageChange: "0.00%",
+        dayData: []
       }
     }
-  };
+  });
+
+  useEffect(() => {
+    const fetchMarketData = async () => {
+      try {
+        const data = await getMarketData();
+        
+        // Determine overall market direction based on S&P 500
+        const direction = data.sp500.percentChange > 0.1 
+          ? "up" 
+          : data.sp500.percentChange < -0.1 
+          ? "down" 
+          : "flat";
+
+        setMarketStatus(prevState => ({
+          ...prevState,
+          direction,
+          timestamp: new Date().toLocaleString(),
+          indices: {
+            sp500: {
+              ...prevState.indices.sp500,
+              currentLevel: data.sp500.currentPrice.toLocaleString(),
+              percentageChange: `${data.sp500.percentChange >= 0 ? '+' : ''}${data.sp500.percentChange}%`
+            },
+            nasdaq: {
+              ...prevState.indices.nasdaq,
+              currentLevel: data.nasdaq.currentPrice.toLocaleString(),
+              percentageChange: `${data.nasdaq.percentChange >= 0 ? '+' : ''}${data.nasdaq.percentChange}%`
+            },
+            dow: {
+              ...prevState.indices.dow,
+              currentLevel: data.dow.currentPrice.toLocaleString(),
+              percentageChange: `${data.dow.percentChange >= 0 ? '+' : ''}${data.dow.percentChange}%`
+            }
+          }
+        }));
+      } catch (error) {
+        console.error('Error updating market data:', error);
+      }
+    };
+
+    // Fetch initial data
+    fetchMarketData();
+
+    // Set up polling every minute
+    const intervalId = setInterval(fetchMarketData, 60000);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
+  }, []);
 
   const getBorderColor = (direction) => {
     switch(direction) {
