@@ -191,7 +191,20 @@ function App() {
           color: '#e0e0e0'
         },
         ticks: {
-          callback: (value) => value.toLocaleString()
+          callback: (value, index, values) => {
+            if (index === 0 || index === values.length - 1) return '';
+            return value.toLocaleString();
+          }
+        },
+        min: (scale) => {
+          const min = Math.min(...chartData.map(point => point.y));
+          const range = Math.abs(min * 0.02); // 2% of min value
+          return min - range;
+        },
+        max: (scale) => {
+          const max = Math.max(...chartData.map(point => point.y));
+          const range = Math.abs(max * 0.02); // 2% of max value
+          return max + range;
         }
       }
     }
