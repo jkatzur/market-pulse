@@ -210,36 +210,6 @@ function App() {
     }
   });
 
-  const processChartData = (data) => {
-    if (!data || !data.quotes) return null;
-    
-    // Sort quotes by timestamp first
-    const sortedQuotes = [...data.quotes].sort((a, b) => 
-      new Date(a.timestamp) - new Date(b.timestamp)
-    );
-    
-    // Get the last 5 points regardless of gaps
-    const lastFiveQuotes = sortedQuotes.slice(-5);
-    
-    // Create evenly spaced data points
-    const chartData = lastFiveQuotes.map((quote, index) => ({
-      x: new Date(quote.timestamp),
-      y: parseFloat(quote.price),
-      index: index
-    }));
-    return chartData;
-  };
-
-  const processIntradayData = (data) => {
-    if (!data || !data.quotes) return null;
-    
-    const chartData = data.quotes.map(quote => ({
-      x: new Date(quote.timestamp),
-      y: parseFloat(quote.price)
-    }));
-    return chartData;
-  };
-
   return (
     <div className="App">
       <header className="market-header">
