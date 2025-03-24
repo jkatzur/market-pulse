@@ -1,18 +1,16 @@
-import querystring from 'querystring-es3';
-import path from 'path';
-import { fileURLToPath } from 'url';
+const path = require('path');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-export default {
+module.exports = {
   webpack: {
-    configure: {
-      resolve: {
+    configure: (webpackConfig) => {
+      webpackConfig.resolve = {
+        ...webpackConfig.resolve,
         fallback: {
-          "querystring": path.resolve(__dirname, 'node_modules/querystring-es3')
+          ...webpackConfig.resolve.fallback,
+          querystring: require.resolve('querystring-es3')
         }
-      }
+      };
+      return webpackConfig;
     }
   }
 }; 
