@@ -146,7 +146,7 @@ function App() {
     }
   };
 
-  const getChartOptions = (indexName) => ({
+  const getChartOptions = (indexName, chartData) => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -169,25 +169,22 @@ function App() {
     },
     scales: {
       x: {
-        type: 'time',
-        time: {
-          unit: 'day',
-          displayFormats: {
-            day: 'MMM d'
-          },
-          tooltipFormat: 'PPP',
-          round: 'day'
-        },
+        type: 'category',
         grid: {
           display: false
         },
         ticks: {
-          source: 'data',
           autoSkip: true,
           maxRotation: 0,
-          align: 'center'
+          callback: (_, index) => {
+            const point = chartData[index];
+            if (!point) return '';
+            return new Date(point.x).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric'
+            });
+          }
         },
-        bounds: 'data'
       },
       y: {
         grid: {
@@ -203,9 +200,19 @@ function App() {
   const processChartData = (data) => {
     if (!data || !data.quotes) return null;
     
-    const chartData = data.quotes.map(quote => ({
+    // Sort quotes by timestamp first
+    const sortedQuotes = [...data.quotes].sort((a, b) => 
+      new Date(a.timestamp) - new Date(b.timestamp)
+    );
+    
+    // Get the last 5 points regardless of gaps
+    const lastFiveQuotes = sortedQuotes.slice(-5);
+    
+    // Create evenly spaced data points
+    const chartData = lastFiveQuotes.map((quote, index) => ({
       x: new Date(quote.timestamp),
-      y: parseFloat(quote.price)
+      y: parseFloat(quote.price),
+      index: index
     }));
     return chartData;
   };
@@ -261,7 +268,7 @@ function App() {
                         tension: 0.1
                       }]
                     }}
-                    options={getChartOptions(index.name)}
+                    options={getChartOptions(key, index.dayData)}
                   />
                 ) : (
                   <div className="chart-placeholder">
