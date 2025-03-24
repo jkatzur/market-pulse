@@ -200,6 +200,26 @@ function App() {
     }
   });
 
+  const processChartData = (data) => {
+    if (!data || !data.quotes) return null;
+    
+    const chartData = data.quotes.map(quote => ({
+      x: new Date(quote.timestamp),
+      y: parseFloat(quote.price)
+    }));
+    return chartData;
+  };
+
+  const processIntradayData = (data) => {
+    if (!data || !data.quotes) return null;
+    
+    const chartData = data.quotes.map(quote => ({
+      x: new Date(quote.timestamp),
+      y: parseFloat(quote.price)
+    }));
+    return chartData;
+  };
+
   return (
     <div className="App">
       <header className="market-header">

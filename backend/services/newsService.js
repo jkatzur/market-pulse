@@ -2,10 +2,6 @@ import fetch from 'node-fetch';
 
 const GNEWS_ENDPOINT = 'https://gnews.io/api/v4/search';
 
-// Debug log
-console.log('GNews API Key loaded:', process.env.GNEWS_API_KEY ? 'Yes' : 'No');
-console.log('GNews API Key:', process.env.GNEWS_API_KEY);
-
 // Keep track of last request time
 let lastRequestTime = 0;
 const MIN_REQUEST_INTERVAL = 10000; // 10 seconds between requests
@@ -19,23 +15,26 @@ function getStartDate() {
   
   // Convert to ET by subtracting 4 hours (ET is UTC-4)
   const etDate = new Date(now.getTime() - (4 * 60 * 60 * 1000));
-  
-  const dayOfWeek = etDate.getDay();
+  console.log('ET date:', etDate);
   const hour = etDate.getHours();
   const minutes = etDate.getMinutes();
-  const date = new Date(etDate);
 
   // Check if it's before market open (9:30am ET)
   const beforeMarketOpen = hour < 9 || (hour === 9 && minutes < 30);
 
+  const dayOfWeek = etDate.getDay('');
+  console.log('Day of week:', dayOfWeek);
+  const date = new Date(etDate);
+
   if (dayOfWeek === 0) { // Sunday
-    date.setDate(date.getDate() - 2); // Go back to Friday
+    date.setDate(etDate.getDate() - 2); // Go back to Friday
   } else if (dayOfWeek === 6) { // Saturday
-    date.setDate(date.getDate() - 1); // Go back to Friday
+    date.setDate(etDate.getDate() - 1); // Go back to Friday
   } else if (dayOfWeek === 1 && beforeMarketOpen) { // Monday before market open
-    date.setDate(date.getDate() - 3); // Go back to Friday
+    console.log('Monday before market open, going back 3 days');
+    date.setDate(etDate.getDate() - 3); // Go back to Friday
   } else if (beforeMarketOpen) { // Any other day before market open
-    date.setDate(date.getDate() - 1); // Go back one day
+    date.setDate(etDate.getDate() - 1); // Go back one day
   }
 
   return date;
@@ -57,11 +56,9 @@ export const getMarketNews = async () => {
     }
 
     const lastTradingDay = getStartDate().toISOString().split('T')[0];
-    console.log('Date info:', {
-      rawDate: getStartDate(),
+    console.log('News query date range:', {
       lastTradingDay,
-      currentNYTime: new Date().toLocaleString("en-US", {timeZone: "America/New_York"}),
-      fromParam: `${lastTradingDay}T00:00:00Z`
+      currentTime: new Date().toISOString()
     });
     
     const url = new URL(GNEWS_ENDPOINT);
@@ -70,36 +67,36 @@ export const getMarketNews = async () => {
     url.searchParams.append('country', 'us');
     url.searchParams.append('max', '10');
     url.searchParams.append('sortby', 'publishedAt');
-    url.searchParams.append('from', `${lastTradingDay}T00:00:00Z`);
-    url.searchParams.append('apikey', apiKey);  // Use the API key from environment
-
-    console.log('Fetching news with URL:', url.toString());
+    url.searchParams.append('from', lastTradingDay);
+    url.searchParams.append('apikey', apiKey);
+    
+    console.log('GNews query:', {
+      url: url.toString(),
+      params: Object.fromEntries(url.searchParams)
+    });
 
     const response = await fetch(url);
 
     if (!response.ok) {
       if (response.status === 429) {
-        console.warn('Rate limit hit, using cached news if available');
+        console.warn('GNews API rate limit hit');
         return cachedNews;
       }
-      console.error('API Error:', {
+      console.error('GNews API Error:', {
         status: response.status,
         statusText: response.statusText,
-        headers: Object.fromEntries(response.headers)
       });
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('API Response:', {
+    console.log('GNews articles found:', {
       totalArticles: data.totalArticles,
-      articlesReceived: data.articles?.length,
-      firstArticle: data.articles?.[0],
-      lastTradingDay
+      received: data.articles?.length
     });
 
     if (!data.articles || data.articles.length === 0) {
-      console.warn('No articles found in response');
+      console.warn('No GNews articles found');
       return cachedNews;
     }
 

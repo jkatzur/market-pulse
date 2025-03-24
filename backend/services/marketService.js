@@ -13,7 +13,6 @@ export const getMarketData = async () => {
   try {
     const quotes = await Promise.all(
       Object.entries(MARKET_INDICES).map(async ([key, symbol]) => {
-        console.log(`Fetching data for ${symbol}...`);
         try {
           const response = await fetch(`${BASE_URL}/v8/finance/chart/${encodeURIComponent(symbol)}`, {
             headers: {
@@ -28,7 +27,6 @@ export const getMarketData = async () => {
           }
 
           const data = await response.json();
-          console.log(`Raw data for ${symbol}:`, data);
 
           if (!data?.chart?.result?.[0]?.meta) {
             console.error(`Invalid data structure for ${symbol}:`, data);
@@ -36,7 +34,6 @@ export const getMarketData = async () => {
           }
 
           const quote = data.chart.result[0].meta;
-          console.log(`Processed quote for ${symbol}:`, quote);
 
           // Calculate percentage change using Number to ensure we have numbers
           const currentPrice = Number(quote.regularMarketPrice);
@@ -55,7 +52,6 @@ export const getMarketData = async () => {
             timestamp: new Date(quote.regularMarketTime * 1000).toLocaleString()
           };
 
-          console.log(`Final processed data for ${symbol}:`, result);
           return result;
 
         } catch (symbolError) {
@@ -70,7 +66,6 @@ export const getMarketData = async () => {
       return acc;
     }, {});
 
-    console.log('Final market data:', result);
     return result;
 
   } catch (error) {
@@ -94,7 +89,6 @@ export const getIntradayData = async (symbol, resolution = '1d') => {
     }
 
     const data = await response.json();
-    console.log(`Raw daily data for ${symbol}:`, data);
 
     if (!data?.chart?.result?.[0]) {
       console.error(`No data available for ${symbol}`);
@@ -125,7 +119,6 @@ export const getIntradayData = async (symbol, resolution = '1d') => {
       })
       .filter(point => point !== null);
 
-    console.log(`Processed chart data for ${symbol}:`, chartData);
     
     if (chartData.length === 0) {
       console.warn(`No valid data points for ${symbol}`);
