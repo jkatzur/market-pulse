@@ -20,7 +20,7 @@ Source: ${article.provider}
 Content: ${article.content || article.description}
 `).join('\n\n');
 
-    const prompt = `Most plausible reason why stocks are ${marketDirection} today. In your answer, prioritize the most important and broadest reasons, such as macroeconomic factors over a single stock, unless that stock is significantly driving market sentiment. Reference specific news articles using (1), (2), etc. as footnotes. Do not make any predictions about the future.
+    const prompt = `Most plausible reason why stocks are ${marketDirection} today. In your answer, prioritize the most important and broadest reasons, such as macroeconomic factors over a single stock, unless that stock is significantly driving market sentiment. Reference specific news articles using (1), (2), etc. as footnotes. Do not make any predictions about the future. Do not begin the response with 'Based on the provided news', just say your most plausible reason. 
 
 ${formattedArticles}`;
 
