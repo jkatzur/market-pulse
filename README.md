@@ -1,6 +1,6 @@
 # Market Pulse
 
-A real-time market analysis dashboard that shows why stocks are moving today, powered by financial data and AI analysis.
+A real-time market analysis dashboard that shows why stocks are moving today, powered by financial data and AI analysis. View live at https://whyarestocksuptoday.com (don't worry I also have whyarestocksdowntoday.com)
 
 ## Prerequisites
 
