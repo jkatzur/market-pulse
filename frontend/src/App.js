@@ -14,7 +14,6 @@ import {
   TimeScale
 } from 'chart.js';
 import 'chartjs-adapter-date-fns';
-import { processFootnotes } from './utils/textProcessing';
 
 // Register ChartJS components
 ChartJS.register(
@@ -133,6 +132,38 @@ function App() {
     initializeData();
   }, [fetchMarketData, fetchNewsAndAnalysis]);
 
+  const processFootnotes = (text) => {
+    // Keep track of which articles are referenced
+    const referencedArticles = [];
+    
+    // Replace footnote markers with links
+    const processedText = text.replace(/\s*\((\d+(?:,\s*\d+)*)\)/g, (match, nums) => {
+      // Split multiple numbers and process each
+      const numbers = nums.split(',').map(n => n.trim());
+      
+      // Process each number and join without spaces
+      const processedNums = numbers.map(num => {
+        if (!referencedArticles.includes(num)) {
+          referencedArticles.push(num);
+        }
+        const newNum = referencedArticles.indexOf(num) + 1;
+        return `<a href="#footnote-${num}" class="footnote-link">${newNum}</a>`;
+      }).join('');
+      
+      // Wrap in sup tags with no spaces
+      return `<sup class="footnote-sup">${processedNums}</sup>`;
+    });
+    
+    // Return both the processed text and the order of references
+    return {
+      text: processedText,
+      articleOrder: referencedArticles
+    };
+  };
+
+  // Process the explanation text and reorder news articles
+  const processedExplanation = processFootnotes(marketStatus.explanation);
+
   const getBorderColor = (direction) => {
     switch(direction) {
       case 'up':
@@ -227,7 +258,7 @@ function App() {
         style={{ borderLeftColor: getBorderColor(marketStatus.direction) }}
       >
         <p dangerouslySetInnerHTML={{ 
-          __html: processFootnotes(marketStatus.explanation) 
+          __html: processedExplanation.text
         }} />
         <small>Last updated: {marketStatus.timestamp}</small>
       </section>
@@ -273,25 +304,32 @@ function App() {
       <section id="market-news" className="market-news">
         <h2>Latest Market News</h2>
         <div className="news-list">
-          {newsData.map((article, index) => (
-            <div key={index} className="news-item" id={`footnote-${index + 1}`}>
-              <a 
-                href={article.url} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="news-link"
+          {processedExplanation.articleOrder.map((originalIndex, newIndex) => {
+            const article = newsData[originalIndex - 1];
+            return (
+              <div 
+                key={originalIndex}
+                className="news-item"
+                id={`footnote-${originalIndex}`}
               >
-                <h3>
-                  <span className="footnote-number">{index + 1}.</span>
-                  {article.title}
-                </h3>
-                <p className="news-meta">
-                  {article.provider} • {new Date(article.datePublished).toLocaleString()}
-                </p>
-                <p>{article.description}</p>
-              </a>
-            </div>
-          ))}
+                <a 
+                  href={article.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="news-link"
+                >
+                  <h3>
+                    <span className="footnote-number">{newIndex + 1}.</span>
+                    {article.title}
+                  </h3>
+                  <p className="news-meta">
+                    {article.provider} • {new Date(article.datePublished).toLocaleString()}
+                  </p>
+                  <p>{article.description}</p>
+                </a>
+              </div>
+            );
+          })}
         </div>
       </section>
     </div>

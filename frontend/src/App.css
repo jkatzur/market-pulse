@@ -235,7 +235,6 @@
 .footnote-link {
   color: #666;
   text-decoration: none;
-  margin: 0 1px;
   cursor: pointer;
 }
 
@@ -245,17 +244,16 @@
   background-color: #f0f0f0;
 }
 
-sup {
-  font-size: 0.75em;
+.footnote-sup {
+  margin: 0;
+  padding: 0;
   line-height: 0;
-  position: relative;
-  vertical-align: baseline;
-  top: -0.5em;
+  white-space: nowrap;
 }
 
-sup a {
-  padding: 0 3px;
-  border-radius: 3px;
+sup {
+  margin-left: 1px;
+  margin-right: 1px;
 }
 
 .footnote-number {
